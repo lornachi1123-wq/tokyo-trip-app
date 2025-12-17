@@ -72,7 +72,6 @@
         .temp-display { font-size: 1.8rem; font-family: 'Shippori Mincho'; font-weight: 600; }
         .outfit-box { background: rgba(255,255,255,0.6); padding: 10px; border-radius: 8px; font-size: 0.85rem; border: 1px solid #EEE; }
 
-        /* 時段天氣 Scroll */
         .hourly-weather-scroll {
             display: flex; gap: 10px; overflow-x: auto; padding: 5px 0;
             border-top: 1px solid rgba(0,0,0,0.05); margin-top: 5px;
@@ -97,16 +96,40 @@
         .timeline-item {
             background: var(--card-bg); border-radius: var(--radius); margin-bottom: 12px;
             display: flex; box-shadow: var(--shadow); position: relative;
+            flex-wrap: wrap; /* 允許折行 */
         }
         .map-trigger {
             width: 50px; background: #F4F1EC; display: flex; flex-direction: column;
             align-items: center; justify-content: center; font-size: 0.7rem; color: var(--highlight);
             border-radius: var(--radius) 0 0 var(--radius); cursor: pointer;
         }
-        .item-content { flex: 1; padding: 12px; position: relative;}
-        .delete-item-btn { position: absolute; top: 10px; right: 10px; color: #eee; cursor: pointer; }
-        .timeline-item:hover .delete-item-btn { color: var(--danger); }
+        .item-content { flex: 1; padding: 12px; position: relative; min-width: 0; }
         
+        .delete-item-btn { position: absolute; top: 10px; right: 10px; color: #eee; cursor: pointer; z-index: 5; }
+        .timeline-item:hover .delete-item-btn { color: var(--danger); }
+
+        /* 新增：展開按鈕與詳細內容樣式 */
+        .expand-btn {
+            position: absolute; bottom: 10px; right: 10px; 
+            color: var(--accent); cursor: pointer; padding: 5px;
+            transition: transform 0.3s ease;
+        }
+        .expand-btn.active { transform: rotate(180deg); }
+        
+        .item-details {
+            display: none; /* 預設隱藏 */
+            width: 100%;
+            background: #fafafa;
+            border-top: 1px dashed #eee;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.6;
+            border-radius: 0 0 var(--radius) var(--radius);
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown { from {opacity:0; transform: translateY(-5px);} to {opacity:1; transform: translateY(0);} }
+
         .item-time { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); display: inline-block; margin-bottom: 4px; }
         .item-title { font-size: 1rem; font-weight: 600; margin: 2px 0; }
         .tag { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; background: #eee; }
@@ -129,7 +152,7 @@
         .nav-btn.active { color: var(--nav-active); }
         .nav-btn i { font-size: 1.2rem; display: block; margin-bottom: 4px; }
 
-        /* 攻略列表優化 (可編輯版) */
+        /* 攻略列表 */
         .guide-section { margin-bottom: 25px; position: relative; }
         .guide-title { font-weight: 700; color: var(--highlight); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
         .guide-card { background: #FFF; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); position: relative; }
@@ -203,130 +226,115 @@
                 date: "12/25 (三)",
                 weather: { 
                     temp: "8°C", icon: "☁️", desc: "冷涼陰天", outfit: "發熱衣+毛衣+防風大衣。",
-                    hourly: [
-                        { time: '18:00', icon: '☁️', temp: '8°C' },
-                        { time: '20:00', icon: '☁️', temp: '7°C' },
-                        { time: '22:00', icon: '🌙', temp: '6°C' }
-                    ]
+                    hourly: [{ time: '18:00', icon: '☁️', temp: '8°C' }, { time: '20:00', icon: '☁️', temp: '7°C' }, { time: '22:00', icon: '🌙', temp: '6°C' }]
                 },
                 hotel: "🏠 住宿: 3 Chome-4-1 Narihira (押上站)",
-                note: "抵達日重點：Skyliner 領票與青砥站轉乘。",
+                note: "抵達日重點：請在 Skyliner 櫃檯領票，並注意青砥站轉乘。",
                 items: [
-                    { time: '18:30', title: '抵達成田機場 (NRT)', type: 'transport', addr: 'Narita Airport', desc: '入境審查與領取 Skyliner 車票。' },
-                    { time: '19:30', title: '搭乘京成 Skyliner', type: 'transport', addr: 'Narita Airport Station', desc: '往京成上野方向，青砥站下車。' },
-                    { time: '21:30', title: '晚餐：六厘舍', type: 'food', addr: '晴空塔 Solamachi 6F', desc: '沾麵名店，L.O. 22:30。' }
+                    { time: '18:30', title: '抵達成田機場 (NRT)', type: 'transport', addr: 'Narita Airport', desc: 'CI108 抵達。入境審查、領行李。', details: '入境後前往 B1 京成電鐵櫃檯領取 Skyliner 車票。\n搭乘時請注意車廂號碼。' },
+                    { time: '19:30', title: '搭乘京成 Skyliner', type: 'transport', addr: 'Narita Airport Station', desc: '往京成上野方向。', details: '搭乘至青砥站下車轉乘。' },
+                    { time: '20:10', title: '青砥站 (Aoto) 轉乘', type: 'transport', addr: 'Aoto Station', desc: '下車同月台轉乘京成押上線。', details: '轉乘往「押上」或「都營淺草線」方向的列車。\n無需出站，對面月台直接上車。' },
+                    { time: '20:25', title: '抵達押上站', type: 'transport', addr: 'Oshiage Station', desc: '步行約 10-15 分鐘至住宿。', details: 'A3 出口有手扶梯，適合攜帶大行李。' },
+                    { time: '21:30', title: '晚餐：六厘舍', type: 'food', addr: '晴空塔 Solamachi 6F', desc: '沾麵名店，營業至 23:00。', details: '推薦：特製沾麵。\n若排隊人潮過多，可改吃同一層的利久牛舌。' }
                 ]
             },
             day2: {
                 date: "12/26 (四)",
                 weather: { 
                     temp: "6°C", icon: "☀️", desc: "晴朗低溫", outfit: "迪士尼靠海風大，建議佩戴圍巾。",
-                    hourly: [
-                        { time: '08:00', icon: '☀️', temp: '4°C' },
-                        { time: '12:00', icon: '☀️', temp: '8°C' },
-                        { time: '18:00', icon: '🌙', temp: '5°C' }
-                    ]
+                    hourly: [{ time: '08:00', icon: '☀️', temp: '4°C' }, { time: '12:00', icon: '☀️', temp: '8°C' }, { time: '18:00', icon: '🌙', temp: '5°C' }]
                 },
                 hotel: "🏠 住宿: 3 Chome-4-1 Narihira",
-                note: "迪士尼全日攻略：入園先搶 DPA 與預約等候卡。",
+                note: "DPA 優先順序：美女與野獸 > 杯麵 > 飛濺山。PP：幽靈公館、小熊維尼。",
                 items: [
-                    { time: '09:00', title: '東京迪士尼樂園入園', type: 'spot', addr: 'Tokyo Disneyland', desc: '第一要務：購買「美女與野獸」DPA。' },
-                    { time: '21:00', title: '夜間煙火 / 遊行', type: 'spot', addr: 'Tokyo Disneyland', desc: '夢之光電子大遊行與煙火秀。' }
+                    { time: '07:45', title: '出發前往舞濱', type: 'transport', addr: 'Oshiage Station', desc: '押上 -> 舞濱 (08:40 抵達)。', details: '押上搭乘半藏門線 -> 錦糸町 換乘 -> 總武線 -> 西船橋 換乘 -> 武藏野線 -> 舞濱。' },
+                    { time: '09:00', title: '東京迪士尼樂園入園', type: 'spot', addr: 'Tokyo Disneyland', desc: '入園第一件事：買 DPA。', details: '1. 抽「幽靈公館」PP\n2. 買「美女與野獸」DPA (2000日圓/人)\n3. 抽表演秀' },
+                    { time: '21:00', title: '夜間煙火秀', type: 'spot', addr: 'Tokyo Disneyland', desc: '結束後前往舞濱站搭車。', details: '觀賞最佳位置：灰姑娘城堡正前方。' },
+                    { time: '22:30', title: '返回住宿', type: 'transport', addr: '3 Chome-4-1 Narihira', desc: '休息。', details: '記得在便利商店買明天的早餐。' }
                 ]
             },
             day3: {
                 date: "12/27 (五)",
                 weather: { 
                     temp: "9°C", icon: "🌤️", desc: "舒適多雲", outfit: "和服體驗日，內穿薄發熱衣。",
-                    hourly: [
-                        { time: '10:00', icon: '🌤️', temp: '8°C' },
-                        { time: '14:00', icon: '☁️', temp: '10°C' },
-                        { time: '19:00', icon: '🌙', temp: '8°C' }
-                    ]
+                    hourly: [{ time: '10:00', icon: '🌤️', temp: '8°C' }, { time: '14:00', icon: '☁️', temp: '10°C' }, { time: '19:00', icon: '🌙', temp: '8°C' }]
                 },
                 hotel: "🏠 住宿: 3 Chome-4-1 Narihira",
-                note: "銀座購物線：Loft -> MUJI -> Uniqlo。",
+                note: "購物順序：Loft > MUJI > Uniqlo > 3COINS > Noix de Beurre (三越B2)。",
                 items: [
-                    { time: '10:00', title: '淺草愛和服體驗', type: 'spot', addr: '淺草愛和服3號店', desc: '換裝後雷門、仲見世通觀光。' },
-                    { time: '13:00', title: '午餐：淺草今半', type: 'food', addr: 'Asakusa Imahan', desc: '壽喜燒百年老店（已預約）。' },
-                    { time: '16:00', title: '銀座購物行程', type: 'shop', addr: 'Ginza Loft', desc: '含 Loft、MUJI 旗艦店等。' }
+                    { time: '10:00', title: '淺草愛和服體驗', type: 'spot', addr: '淺草愛和服3號店', desc: '換裝後雷門、仲見世通觀光。', details: '預約信件已截圖。\n請攜帶個人貼身薄衣物。' },
+                    { time: '13:00', title: '午餐：淺草今半', type: 'food', addr: 'Asakusa Imahan', desc: '壽喜燒百年老店（已預約）。', details: '預約時間：13:00。\n推薦午間套餐，CP值較高。' },
+                    { time: '14:30', title: '小網神社', type: 'spot', addr: 'Koami Shrine', desc: '強運厄除神社 (人形町站)。', details: '人形町站 A5 出口步行 5 分鐘。\n可以洗錢（錢洗弁財天）。' },
+                    { time: '16:00', title: '銀座購物行程', type: 'shop', addr: 'Ginza Loft', desc: 'Loft, Muji, Uniqlo, 3COINS。', details: '銀座三越 B2 Noix de Beurre 費南雪必買。' },
+                    { time: '19:30', title: '晚餐：花山烏冬', type: 'food', addr: 'Hanayama Udon Ginza', desc: '鬼ひも川烏龍麵 (需排隊)。', details: '若排隊太長可改吃附近的一蘭拉麵。' }
                 ]
             },
             day4: {
                 date: "12/28 (六)",
                 weather: { 
                     temp: "2°C", icon: "🗻", desc: "河口湖寒冷", outfit: "山區極寒，須穿著厚羽絨衣、手套。",
-                    hourly: [
-                        { time: '09:00', icon: '☁️', temp: '3°C' },
-                        { time: '12:00', icon: '☀️', temp: '5°C' },
-                        { time: '17:00', icon: '🌙', temp: '0°C' }
-                    ]
+                    hourly: [{ time: '09:00', icon: '☁️', temp: '3°C' }, { time: '12:00', icon: '☀️', temp: '5°C' }, { time: '17:00', icon: '🌙', temp: '0°C' }]
                 },
-                hotel: "🏠 住宿: 淺川 180-1 (河口湖)",
-                note: "河口湖移動日：大行李寄放新宿站。",
+                hotel: "🏠 住宿: Asakawa 180-1 (河口湖)",
+                note: "大行李寄放新宿站，帶輕便行李。",
                 items: [
-                    { time: '10:00', title: '新宿巴士站出發', type: 'transport', addr: 'Shinjuku Bus Terminal', desc: '前往河口湖，車程約 2 小時。' },
-                    { time: '15:30', title: '大石公園 (紅線巴士)', type: 'spot', addr: 'Oishi Park', desc: '拍攝富士山絕景。' }
+                    { time: '10:00', title: '新宿巴士總站出發', type: 'transport', addr: 'Shinjuku Bus Terminal', desc: '前往河口湖，車程約 2 小時。', details: '巴士票已預訂。\n上車地點：新宿南口巴士總站 4F。' },
+                    { time: '12:00', title: '午餐：Hoto Fudo', type: 'food', addr: 'Hoto Fudo', desc: '不動茶屋餺飥麵。', details: '份量很大，建議分食。\n特色是白色雲朵建築。' },
+                    { time: '14:00', title: '天上山公園纜車', type: 'spot', addr: 'Mt. Fuji Panoramic Ropeway', desc: '搭乘纜車眺望富士山。', details: '山頂有兔子神社，可吃糰子。' },
+                    { time: '15:30', title: '大石公園 (紅線巴士)', type: 'spot', addr: 'Oishi Park', desc: '拍攝富士山絕景。', details: '紅線巴士終點站 (河口湖自然生活館)。\n這裡有賣藍莓冰淇淋。' }
                 ]
             },
             day5: {
                 date: "12/29 (日)",
                 weather: { 
                     temp: "3°C", icon: "☀️", desc: "山區晴朗", outfit: "保暖羽絨衣、防滑鞋。早晚溫差極大。",
-                    hourly: [
-                        { time: '08:00', icon: '☀️', temp: '-2°C' },
-                        { time: '12:00', icon: '☀️', temp: '4°C' },
-                        { time: '18:00', icon: '🌙', temp: '1°C' }
-                    ]
+                    hourly: [{ time: '08:00', icon: '☀️', temp: '-2°C' }, { time: '12:00', icon: '☀️', temp: '4°C' }, { time: '18:00', icon: '🌙', temp: '1°C' }]
                 },
-                hotel: "🏠 住宿: 江戶川區松島 (新小岩)",
-                note: "新倉富士淺間神社須爬階梯，建議穿好走的鞋。",
+                hotel: "🏠 住宿: 江戶川區松島 4-45-5 (新小岩)",
+                note: "新倉富士淺間神社須爬階梯。晚上入住新小岩。",
                 items: [
-                    { time: '09:25', title: '新倉富士淺間神社', type: 'spot', addr: 'Chureito Pagoda', desc: '經典五重塔+富士山拍攝點。' },
-                    { time: '18:30', title: '晚餐：新宿燒肉 Bondz', type: 'food', addr: '新宿', desc: '返回新宿後享用燒肉。' }
+                    { time: '09:10', title: '搭電車往下吉田', type: 'transport', addr: 'Kawaguchiko Station', desc: '富士急行線 (約15分)。', details: '可以使用西瓜卡搭乘。' },
+                    { time: '09:25', title: '新倉富士淺間神社', type: 'spot', addr: 'Chureito Pagoda', desc: '經典五重塔+富士山拍攝點。', details: '需要爬 398 階樓梯，請穿好走的鞋。' },
+                    { time: '16:00', title: '搭巴士回新宿', type: 'transport', addr: 'Kawaguchiko Station', desc: '高速巴士返回市區。', details: '回程容易塞車，建議上車前先去洗手間。' },
+                    { time: '18:30', title: '晚餐：新宿燒肉 Bondz', type: 'food', addr: 'Yakiniku Hormone Bondz Shinjuku', desc: '享用燒肉。', details: 'Google Maps 連結：https://share.google/EdNQf3suyG5gGVilQ' }
                 ]
             },
             day6: {
                 date: "12/30 (一)",
                 weather: { 
                     temp: "8°C", icon: "🛍️", desc: "市區冷", outfit: "穿著舒適的步行鞋，這天行程購物較多。",
-                    hourly: [
-                        { time: '10:00', icon: '🌤️', temp: '7°C' },
-                        { time: '15:00', icon: '☁️', temp: '9°C' },
-                        { time: '20:00', icon: '🌙', temp: '6°C' }
-                    ]
+                    hourly: [{ time: '10:00', icon: '🌤️', temp: '7°C' }, { time: '15:00', icon: '☁️', temp: '9°C' }, { time: '20:00', icon: '🌙', temp: '6°C' }]
                 },
                 hotel: "🏠 住宿: 新小岩 (連住)",
                 note: "最後掃貨：上野二木之菓子、澀谷 Sky 夜景。",
                 items: [
-                    { time: '10:00', title: '上野阿美橫丁', type: 'shop', addr: '二木之菓子', desc: '購買伴手禮、藥妝。' },
-                    { time: '14:00', title: 'Shibuya Sky 澀谷天空', type: 'spot', addr: '澀谷', desc: '俯瞰東京夜景。' }
+                    { time: '10:00', title: '上野阿美橫丁', type: 'shop', addr: '二木之菓子', desc: '二木之菓子、松本清。', details: '二木之菓子有免稅櫃台。\n建議多買一些KitKat和抹茶口味零食。' },
+                    { time: '12:30', title: '午餐：山家炸豬排', type: 'food', addr: 'Yamabe Ueno', desc: '御徒町店/上野店。', details: 'CP值超高，需排隊。' },
+                    { time: '14:00', title: 'Shibuya Sky', type: 'spot', addr: 'Shibuya Scramble Square', desc: '俯瞰東京夜景。', details: '已預約 14:20 入場。\n頂樓風大，物品需寄放。' },
+                    { time: '20:00', title: '晚餐：鰻富士', type: 'food', addr: '炭焼うな富士', desc: '名古屋名店鰻魚飯。', details: '特色是酥脆的外皮。' }
                 ]
             },
             day7: {
                 date: "12/31 (二)",
                 weather: { 
                     temp: "7°C", icon: "✈️", desc: "晴轉多雲", outfit: "穿著最厚實的衣物上機。",
-                    hourly: [
-                        { time: '12:00', icon: '🌤️', temp: '8°C' },
-                        { time: '15:00', icon: '☁️', temp: '7°C' },
-                        { time: '18:00', icon: '🌙', temp: '5°C' }
-                    ]
+                    hourly: [{ time: '12:00', icon: '🌤️', temp: '8°C' }, { time: '15:00', icon: '☁️', temp: '7°C' }, { time: '18:00', icon: '🌙', temp: '5°C' }]
                 },
                 hotel: "🏠 返回溫暖的家",
-                note: "機場免稅店最後衝刺：買 Financier Henri Charpentier。",
+                note: "機場免稅店衝刺：買 Henri Charpentier 費南雪。",
                 items: [
-                    { time: '14:30', title: '前往機場', type: 'transport', addr: 'NRT', desc: '提早抵達逛免稅店。' },
-                    { time: '19:30', title: '班次 CI109 起飛', type: 'transport', addr: 'Narita Airport', desc: '結束美好旅程。' }
+                    { time: '11:00', title: '退房 & 早午餐', type: 'food', addr: 'Shin-Koiwa Station', desc: '新小岩周邊。', details: '檢查行李是否遺漏。' },
+                    { time: '14:30', title: '前往機場', type: 'transport', addr: 'NRT', desc: '15:30 抵達逛免稅店。', details: '推薦購買：Henri Charpentier 費南雪。\n晚餐可在機場 Shake Shack 解決。' },
+                    { time: '19:30', title: '班次 CI109 起飛', type: 'transport', addr: 'Narita Airport', desc: '22:45 抵達桃園。', details: '平安回家！' }
                 ]
             }
         };
 
         const defaultGuides = [
-            { id: 1, title: "入境與網路", icon: "fas fa-plane-arrival", content: ["記得先填寫 Visit Japan Web 並截圖 QR Code。", "準備實體西瓜卡或手機 Apple Wallet 綁定 Suica。", "事先下載 Google Maps 離線地圖備用。"] },
-            { id: 2, title: "購物與免稅", icon: "fas fa-shopping-bag", content: ["隨身攜帶護照正本，單店滿 5,000 日圓可退稅。", "免稅品在日本不可拆封（標註消耗品類者）。", "必逛推薦：3COINS, 銀座三越 B2 費南雪, Loft。"] },
-            { id: 3, title: "日本禮儀", icon: "fas fa-heart", content: ["街道很少垃圾桶，建議隨身帶個小塑膠袋裝垃圾。", "搭乘地鐵時請保持安靜，手機調至靜音模式。", "結帳時將錢放在專用小托盤上。"] },
-            { id: 4, title: "富士山攻略", icon: "fas fa-mountain", content: ["河口湖清晨極冷（可達 0°C 以下），務必洋蔥式穿法。", "富士回遊列車強烈建議提早一個月預約。", "拍照請注意安全與當地規範，勿阻礙交通。"] }
+            { id: 1, title: "入境與網路", icon: "fas fa-plane-arrival", content: ["記得先填寫 Visit Japan Web 並截圖 QR Code。", "準備實體西瓜卡或手機 Apple Wallet 綁定 Suica。", "Skyliner 在青砥站轉乘京成押上線，無需出站，同月台換車。"] },
+            { id: 2, title: "購物與免稅", icon: "fas fa-shopping-bag", content: ["隨身攜帶護照正本，單店滿 5,000 日圓可退稅。", "免稅品在日本不可拆封（標註消耗品類者）。", "必逛推薦：3COINS, 銀座三越 B2 費南雪 (Noix de Beurre), Loft。"] },
+            { id: 3, title: "迪士尼攻略", icon: "fas fa-magic", content: ["入園先買 DPA：美女與野獸 > 杯麵 > 飛濺山。", "抽 PP (預約等候卡)：幽靈公館、小熊維尼。", "遊行/煙火前一小時佔位。"] },
+            { id: 4, title: "富士山攻略", icon: "fas fa-mountain", content: ["河口湖清晨極冷（可達 0°C 以下），務必洋蔥式穿法。", "大行李寄放新宿，帶輕便行李去河口湖。", "拍照請注意安全與當地規範。"] }
         ];
 
         // --- 狀態變數 ---
@@ -337,18 +345,20 @@
 
         // --- 初始化與存儲 ---
         function init() {
-            // 從 LocalStorage 讀取資料
-            const storedTrip = localStorage.getItem('tokyo_trip_data_v2');
-            const storedLedger = localStorage.getItem('tokyo_ledger_data_v2');
-            const storedGuides = localStorage.getItem('tokyo_guides_data_v2');
+            const storedTrip = localStorage.getItem('tokyo_trip_data_v3'); // Updated Key
+            const storedLedger = localStorage.getItem('tokyo_ledger_data_v3');
+            const storedGuides = localStorage.getItem('tokyo_guides_data_v3');
 
             tripData = storedTrip ? JSON.parse(storedTrip) : JSON.parse(JSON.stringify(defaultTripData));
             ledgerData = storedLedger ? JSON.parse(storedLedger) : [];
             guideData = storedGuides ? JSON.parse(storedGuides) : JSON.parse(JSON.stringify(defaultGuides));
 
-            // 如果舊資料沒有 hourly，補上空陣列
+            // 資料結構遷移：確保有 hourly 和 details
             for(let key in tripData) {
                 if(!tripData[key].weather.hourly) tripData[key].weather.hourly = [];
+                tripData[key].items.forEach(item => {
+                    if(item.details === undefined) item.details = "點擊此處編輯詳細備註...";
+                });
             }
 
             renderTabs();
@@ -358,9 +368,9 @@
         }
 
         function saveData() {
-            localStorage.setItem('tokyo_trip_data_v2', JSON.stringify(tripData));
-            localStorage.setItem('tokyo_ledger_data_v2', JSON.stringify(ledgerData));
-            localStorage.setItem('tokyo_guides_data_v2', JSON.stringify(guideData));
+            localStorage.setItem('tokyo_trip_data_v3', JSON.stringify(tripData));
+            localStorage.setItem('tokyo_ledger_data_v3', JSON.stringify(ledgerData));
+            localStorage.setItem('tokyo_guides_data_v3', JSON.stringify(guideData));
         }
 
         // --- 行程功能 ---
@@ -383,7 +393,6 @@
             const data = tripData[dayKey];
             const container = document.getElementById('day-content');
             
-            // 渲染時段天氣
             let hourlyHTML = data.weather.hourly.map((h, idx) => `
                 <div class="hourly-item" onclick="editHourly(${idx})">
                     <span class="h-time" contenteditable="true" onblur="updateHourly(${idx}, 'time', this.innerText)">${h.time}</span>
@@ -416,7 +425,7 @@
                 
                 <div id="sortable-list">
                     ${data.items.map((item, index) => `
-                        <div class="timeline-item" data-id="${index}">
+                        <div class="timeline-item" data-id="${index}" id="item-${index}">
                             <div class="map-trigger" onclick="window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('${item.addr}'))">
                                 <i class="fas fa-map-marker-alt"></i> 導航
                             </div>
@@ -426,6 +435,12 @@
                                 <div class="item-title" contenteditable="true" onblur="updateItem(${index}, 'title', this.innerText)">${item.title}</div>
                                 <span class="tag ${item.type}" onclick="toggleType(${index})">${item.type === 'food' ? '美食' : (item.type === 'shop' ? '購物' : '景點')}</span>
                                 <p style="font-size:0.8rem; color:#888; margin:5px 0 0 0;" contenteditable="true" onblur="updateItem(${index}, 'desc', this.innerText)">${item.desc}</p>
+                                
+                                <div class="item-details" contenteditable="true" onblur="updateItem(${index}, 'details', this.innerText)">
+                                    ${item.details || '點擊此處新增詳細備註...'}
+                                </div>
+                                
+                                <i class="fas fa-chevron-down expand-btn" onclick="toggleDetails(${index})"></i>
                             </div>
                         </div>
                     `).join('')}
@@ -447,7 +462,22 @@
             });
         }
 
-        // --- 行程資料更新邏輯 ---
+        // --- 新增：展開/收合功能 ---
+        function toggleDetails(index) {
+            const itemEl = document.getElementById(`item-${index}`);
+            const detailEl = itemEl.querySelector('.item-details');
+            const btnEl = itemEl.querySelector('.expand-btn');
+            
+            if (detailEl.style.display === 'block') {
+                detailEl.style.display = 'none';
+                btnEl.classList.remove('active');
+            } else {
+                detailEl.style.display = 'block';
+                btnEl.classList.add('active');
+            }
+        }
+
+        // --- 資料更新邏輯 ---
         function updateDayField(field, subField, value) {
             if (subField) tripData[currentDay][field][subField] = value;
             else tripData[currentDay][field] = value;
@@ -475,7 +505,7 @@
 
         function addItem() {
             tripData[currentDay].items.push({
-                time: '00:00', title: '新行程', type: 'spot', addr: '', desc: '點擊編輯內容'
+                time: '00:00', title: '新行程', type: 'spot', addr: '', desc: '點擊編輯內容', details: '點擊此處編輯詳細備註...'
             });
             renderDay(currentDay);
             saveData();
@@ -495,7 +525,7 @@
             saveData();
         }
 
-        // --- 攻略功能 (Data Driven) ---
+        // --- 攻略功能 ---
         function renderGuides() {
             const container = document.getElementById('guide-list-container');
             container.innerHTML = guideData.map((guide, gIndex) => `
